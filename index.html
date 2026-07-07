@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Lesson 5: Sounds and Letters</title>
+<style>
+  :root{
+    --meadow:#eaf6e4;
+    --meadow-deep:#cdeabf;
+    --bark:#7a5230;
+    --bark-dark:#5c3d22;
+    --sun:#ffc857;
+    --sun-deep:#f5a623;
+    --fox:#e8703a;
+    --fox-deep:#c65221;
+    --sky:#eef6fb;
+    --ink:#3a2e22;
+    --paper:#fffaf0;
+    --wrong:#e05c5c;
+    --right:#4caf7d;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    font-family:'Comic Sans MS','Chalkboard SE','Segoe Print',-apple-system,sans-serif;
+    background:
+      radial-gradient(circle at 10% 15%, rgba(255,255,255,0.5) 0, transparent 40%),
+      radial-gradient(circle at 90% 85%, rgba(255,255,255,0.4) 0, transparent 45%),
+      linear-gradient(180deg,var(--sky) 0%,var(--meadow) 45%,var(--meadow-deep) 100%);
+    color:var(--ink);
+    overflow:hidden;
+  }
+  body{
+    display:flex;
+    flex-direction:column;
+  }
+  .stage{
+    max-width:1100px;
+    width:100%;
+    margin:0 auto;
+    padding:14px 16px 0;
+    display:flex;
+    flex-direction:column;
+    flex:1 1 auto;
+    min-height:0;
+  }
+  .stage-header{
+    flex:none;
+  }
+  .stage-main{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:scroll;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    scroll-behavior:smooth;
+    padding:2px 2px calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ---------- Header / Tabs ---------- */
+  header{
+    display:flex;align-items:center;gap:14px;
+    background:var(--paper);
+    border:5px solid var(--bark);
+    border-radius:26px;
+    padding:14px 20px;
+    box-shadow:0 8px 0 rgba(90,60,30,0.15);
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .header-badge{
+    width:64px;height:64px;border-radius:50%;
+    background:var(--fox);
+    display:flex;align-items:center;justify-content:center;
+    font-size:34px;flex:none;
+    border:4px solid var(--fox-deep);
+    box-shadow:inset 0 -4px 0 rgba(0,0,0,0.15);
+  }
+  header h1{
+    margin:0;font-size:1.5rem;color:var(--bark-dark);
+    line-height:1.15;
+  }
+  header p{margin:2px 0 0;font-size:0.95rem;color:#7a6a4f;font-weight:bold;}
+
+  nav.tabs{
+    display:flex;gap:10px;flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+  nav.tabs button{
+    flex:1 1 160px;
+    min-height:64px;
+    border:none;
+    border-radius:20px;
+    font-family:inherit;
+    font-weight:bold;
+    font-size:1.05rem;
+    cursor:pointer;
+    background:var(--paper);
+    border:4px solid var(--bark);
+    color:var(--bark-dark);
+    box-shadow:0 6px 0 rgba(90,60,30,0.18);
+    transition:transform .12s ease;
+    padding:6px 10px;
+    touch-action:manipulation;
+  }
+  nav.tabs button:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(90,60,30,0.18);}
+  nav.tabs button.active{
+    background:var(--sun);
+    border-color:var(--sun-deep);
+    box-shadow:0 6px 0 var(--sun-deep);
+  }
+
+  section.panel{display:none;}
+  section.panel.active{display:block;animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .card{
+    background:var(--paper);
+    border:5px solid var(--bark);
+    border-radius:28px;
+    padding:22px 22px 26px;
+    box-shadow:0 10px 0 rgba(90,60,30,0.13);
+    margin-bottom:22px;
+  }
+  .card h2{
+    margin:0 0 4px;
+    font-size:1.35rem;
+    color:var(--fox-deep);
+    display:flex;align-items:center;gap:10px;
+  }
+  .card h2 .num{
+    background:var(--fox);color:white;
+    width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.1rem;flex:none;
+    border:3px solid var(--fox-deep);
+  }
+  .instructions{font-size:1rem;color:#6b5a40;margin:0 0 18px;font-weight:bold;}
+
+  /* ---------- Sound button ---------- */
+  .soundbtn{
+    border:none;border-radius:16px;
+    background:var(--sky);
+    border:3px solid #9cc7de;
+    width:52px;height:52px;
+    font-size:1.4rem;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 0 #7fa9c2;
+    flex:none;
+    touch-action:manipulation;
+  }
+  .soundbtn:active{transform:translateY(3px);box-shadow:none;}
+
+  /* ================= ACTIVITY 1 ================= */
+  .word-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:20px;
+  }
+  .word-card{
+    background:linear-gradient(180deg,#ffffff,#fdf6e8);
+    border:4px solid var(--bark);
+    border-radius:22px;
+    padding:14px 10px 18px;
+    text-align:center;
+    position:relative;
+  }
+  .word-card .art{
+    font-size:64px;line-height:1;margin-bottom:6px;
+    filter:drop-shadow(0 4px 2px rgba(0,0,0,0.15));
+  }
+  .word-build{
+    display:flex;justify-content:center;align-items:center;gap:6px;
+    margin-top:10px;flex-wrap:wrap;
+  }
+  .letter-slot{
+    width:48px;height:52px;
+    border-radius:12px;
+    background:#fff;
+    border:3px dashed var(--fox);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.6rem;font-weight:bold;
+    color:var(--bark-dark);
+  }
+  .letter-slot.filled{border-style:solid;background:var(--meadow);border-color:var(--right);}
+  .letter-fixed{
+    width:48px;height:52px;
+    border-radius:12px;
+    background:var(--sun);
+    border:3px solid var(--sun-deep);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.6rem;font-weight:bold;color:var(--bark-dark);
+  }
+  .letter-choices{
+    display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap;
+  }
+  .letter-choice{
+    width:56px;height:56px;border-radius:14px;
+    border:3px solid var(--bark);
+    background:white;
+    font-size:1.5rem;font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 rgba(90,60,30,0.25);
+    touch-action:manipulation;
+  }
+  .letter-choice:active{transform:translateY(3px);box-shadow:none;}
+  .letter-choice.used{opacity:0.35;pointer-events:none;}
+  .word-card.solved{background:linear-gradient(180deg,#eafff0,#d9f7e3);}
+  .word-card.solved .art{animation:pop .5s ease;}
+  @keyframes pop{0%{transform:scale(1);}40%{transform:scale(1.25) rotate(-6deg);}100%{transform:scale(1);}}
+
+  /* ================= ACTIVITY 2 chant ================= */
+  .chant-block{
+    display:grid;grid-template-columns:1.3fr 1fr;gap:20px;margin-bottom:22px;
+  }
+  @media(max-width:760px){.chant-block{grid-template-columns:1fr;}}
+  .chant-lines{
+    background:#fff;border:3px solid #d8c9a8;border-radius:20px;
+    padding:16px 18px;font-size:1.15rem;line-height:2.1;
+  }
+  .chant-lines .lineflex{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;}
+  .miniblank{
+    display:inline-flex;width:52px;height:50px;border-radius:10px;
+    border:3px dashed var(--fox);background:#fff8ec;
+    align-items:center;justify-content:center;font-weight:bold;font-size:1.25rem;
+    cursor:text;
+    touch-action:manipulation;
+  }
+  .miniblank.correct{background:var(--meadow);border-style:solid;border-color:var(--right);}
+  .miniblank.wrong{background:#ffe3e3;border-style:solid;border-color:var(--wrong);}
+  .scene-illustration{
+    background:var(--sky);border:3px solid #9cc7de;border-radius:20px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:80px;padding:20px;text-align:center;
+  }
+  .keyboard-row{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;
+  }
+  .keyboard-row button{
+    width:56px;height:56px;border-radius:12px;
+    border:3px solid var(--bark);background:white;font-weight:bold;font-size:1.3rem;
+    cursor:pointer;box-shadow:0 4px 0 rgba(90,60,30,0.25);
+    touch-action:manipulation;
+  }
+  .keyboard-row button:active{transform:translateY(3px);box-shadow:none;}
+  .keyboard-row button.del{background:#ffe0e0;border-color:var(--wrong);width:auto;min-width:56px;padding:0 14px;}
+  .check-row{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;}
+
+  /* ================= BIG BUTTONS shared ================= */
+  .bigbtn{
+    border:none;border-radius:18px;
+    padding:14px 22px;font-size:1.05rem;font-weight:bold;
+    cursor:pointer;color:white;
+    box-shadow:0 6px 0 rgba(0,0,0,0.2);
+    font-family:inherit;
+    min-height:48px;
+    touch-action:manipulation;
+  }
+  .bigbtn:active{transform:translateY(4px);box-shadow:none;}
+  .bigbtn.check{background:var(--right);}
+  .bigbtn.reset{background:#9c8a6a;}
+  .bigbtn.next{background:var(--fox);}
+  .bigbtn.play{background:#4a90c4;}
+
+  .feedback{
+    margin-top:12px;font-weight:bold;font-size:1.05rem;min-height:26px;
+  }
+  .feedback.good{color:var(--right);}
+  .feedback.bad{color:var(--wrong);}
+
+  /* ================= PATTERNS activity ================= */
+  .pattern-list{
+    display:flex;flex-direction:column;gap:10px;font-size:1.3rem;
+  }
+  .pattern-word{
+    background:#fff;border:3px solid #d8c9a8;border-radius:16px;
+    padding:10px 16px;display:flex;align-items:center;gap:4px;
+    cursor:pointer;user-select:none;
+    flex-wrap:wrap;
+  }
+  .pattern-word .ch{
+    min-width:48px;min-height:48px;
+    padding:2px 6px;border-radius:10px;
+    display:inline-flex;align-items:center;justify-content:center;
+    touch-action:manipulation;
+  }
+  .pattern-word .ch.marked{background:var(--sun);}
+  .pattern-hint{
+    background:var(--meadow);border:3px dashed var(--bark);border-radius:16px;
+    padding:14px;font-size:1.05rem;margin-bottom:16px;
+  }
+  .pattern-hint b{color:var(--fox-deep);}
+
+  /* ================= PRONUNCIATION STAR GAME ================= */
+  .star-banner{
+    background:linear-gradient(120deg,var(--sun),var(--fox));
+    border:4px solid var(--fox-deep);
+    border-radius:24px;color:white;
+    padding:16px 20px;margin-bottom:18px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .star-banner .stardot{font-size:2.2rem;}
+  .star-banner h2{color:white;margin:0;font-size:1.3rem;}
+  .star-banner p{margin:2px 0 0;font-size:0.95rem;font-weight:bold;opacity:0.95;}
+
+  .mouth-stage{
+    display:flex;flex-direction:column;align-items:center;gap:18px;
+  }
+  .mouth-face{
+    width:220px;height:220px;border-radius:50%;
+    background:#ffe3c2;
+    border:5px solid var(--bark);
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:inset 0 -10px 20px rgba(0,0,0,0.06);
+  }
+  .mouth-face .eye{
+    position:absolute;top:62px;width:20px;height:26px;border-radius:50%;background:var(--bark-dark);
+  }
+  .mouth-face .eye.left{left:58px;}
+  .mouth-face .eye.right{right:58px;}
+  .mouth-shape{
+    width:90px;height:36px;background:var(--bark-dark);
+    border-radius:50%;
+    transition:all .25s ease;
+  }
+  /* mouth shape variants keyed by vowel-ish opening */
+  .shape-wide{width:100px;height:26px;border-radius:50px/18px;}
+  .shape-round{width:46px;height:46px;border-radius:50%;}
+  .shape-smile{width:96px;height:34px;border-radius:0 0 60px 60px;}
+  .shape-small{width:34px;height:34px;border-radius:50%;}
+  .shape-flat{width:80px;height:14px;border-radius:10px;}
+
+  .guess-options{
+    display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
+  }
+  .guess-btn{
+    background:white;border:4px solid var(--bark);border-radius:18px;
+    padding:14px 22px;font-size:1.3rem;font-weight:bold;cursor:pointer;
+    box-shadow:0 6px 0 rgba(90,60,30,0.25);
+    min-width:100px;
+    min-height:48px;
+    touch-action:manipulation;
+  }
+  .guess-btn:active{transform:translateY(4px);box-shadow:none;}
+  .guess-btn.correct-flash{background:var(--right);color:white;border-color:#357a56;}
+  .guess-btn.wrong-flash{background:var(--wrong);color:white;border-color:#a13c3c;opacity:0.6;}
+
+  .star-controls{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+  .score-pill{
+    background:var(--paper);border:3px solid var(--bark);border-radius:50px;
+    padding:8px 18px;font-weight:bold;font-size:1rem;
+  }
+  .teacher-note{
+    background:#fff7e0;border:3px dashed var(--sun-deep);border-radius:16px;
+    padding:14px 16px;font-size:0.95rem;color:#6b5a40;margin-top:18px;
+  }
+  .teacher-note b{color:var(--fox-deep);}
+
+  footer{
+    text-align:center;color:#8a7a5c;font-size:0.85rem;margin-top:10px;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="stage-header">
+    <header>
+      <div class="header-badge">🦊</div>
+      <div>
+        <h1>Lesson 5 &middot; Sounds and Letters</h1>
+        <p>Academy Stars 2 &middot; Short vowel sounds &amp; word patterns</p>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tabbtn active" data-target="panel1">1&nbsp; Listen &amp; Complete</button>
+      <button class="tabbtn" data-target="panel2">2&nbsp; Chant Time</button>
+      <button class="tabbtn" data-target="panel3">3&nbsp; Spot the Pattern</button>
+      <button class="tabbtn" data-target="panelstar">⭐ Mouth Shapes</button>
+    </nav>
+  </div>
+
+  <main class="stage-main">
+
+  <!-- ============ PANEL 1: Listen and say, complete ============ -->
+  <section class="panel active" id="panel1">
+    <div class="card">
+      <h2><span class="num">1</span> Listen and say. Complete the words.</h2>
+      <p class="instructions">Tap the sound button to hear the word, then tap the missing letter.</p>
+
+      <div class="word-grid" id="wordGrid"></div>
+
+      <div class="check-row">
+        <button class="bigbtn check" id="checkAll1">Check my words</button>
+        <button class="bigbtn reset" id="resetAll1">Start again</button>
+      </div>
+      <div class="feedback" id="feedback1"></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 2: chant ============ -->
+  <section class="panel" id="panel2">
+    <div class="card">
+      <h2><span class="num">2</span> Listen and say the chant. Then write the letters.</h2>
+      <p class="instructions">Tap a gap, then tap a letter below to fill it in.</p>
+
+      <div class="chant-block">
+        <div>
+          <div class="chant-lines" id="chantOne">
+            <div class="lineflex"><span>The bl</span><span class="miniblank" data-answer="a" data-line="1">?</span><span>ck c</span><span class="miniblank" data-answer="a" data-line="1">?</span><span>t is</span></div>
+            <div class="lineflex"><span>Under the r</span><span class="miniblank" data-answer="e" data-line="1">?</span><span>d b</span><span class="miniblank" data-answer="e" data-line="1">?</span><span>d.</span></div>
+          </div>
+          <button class="soundbtn" id="playChant1" style="margin-top:10px;">🔊</button>
+        </div>
+        <div class="scene-illustration">🐱🛏️</div>
+      </div>
+
+      <div class="chant-block">
+        <div>
+          <div class="chant-lines" id="chantTwo">
+            <div class="lineflex"><span>My m</span><span class="miniblank" data-answer="u" data-line="2">?</span><span>m has g</span><span class="miniblank" data-answer="o" data-line="2">?</span><span>t</span></div>
+            <div class="lineflex"><span>A f</span><span class="miniblank" data-answer="u" data-line="2">?</span><span>nny w</span><span class="miniblank" data-answer="i" data-line="2">?</span><span>g.</span></div>
+          </div>
+          <button class="soundbtn" id="playChant2" style="margin-top:10px;">🔊</button>
+        </div>
+        <div class="scene-illustration">💇‍♀️👨‍🦰</div>
+      </div>
+
+      <div class="chant-block">
+        <div>
+          <div class="chant-lines" id="chantThree">
+            <div class="lineflex"><span>The fr</span><span class="miniblank" data-answer="o" data-line="3">?</span><span>g and the d</span><span class="miniblank" data-answer="o" data-line="3">?</span><span>g</span></div>
+            <div class="lineflex"><span>Are on the l</span><span class="miniblank" data-answer="o" data-line="3">?</span><span>g.</span></div>
+          </div>
+          <button class="soundbtn" id="playChant3" style="margin-top:10px;">🔊</button>
+        </div>
+        <div class="scene-illustration">🐸🐶</div>
+      </div>
+
+      <p class="instructions" style="margin-top:6px;">Tap a blank above, then choose a letter:</p>
+      <div class="keyboard-row" id="chantKeys"></div>
+
+      <div class="check-row">
+        <button class="bigbtn check" id="checkChant">Check the chant</button>
+        <button class="bigbtn reset" id="resetChant">Clear all</button>
+      </div>
+      <div class="feedback" id="feedback2"></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 3: patterns ============ -->
+  <section class="panel" id="panel3">
+    <div class="card">
+      <h2><span class="num">🧠</span> Learning to learn: Spot the pattern</h2>
+      <div class="pattern-hint">
+        Look at the pattern in these words: <b>thir-ty, for-ty, fif-ty, six-ty, seven-ty</b>. They all end the same way!
+        <br><br>
+        Now tap the letters in each word below that make the <b>matching pattern</b>. Look for the ending they share.
+      </div>
+
+      <p class="instructions">Group A — numbers:</p>
+      <div class="pattern-list" id="patternGroupA"></div>
+
+      <p class="instructions" style="margin-top:18px;">Group B — people words. Tap the letters that match each other:</p>
+      <div class="pattern-list" id="patternGroupB"></div>
+
+      <div class="check-row">
+        <button class="bigbtn check" id="checkPatterns">Check my patterns</button>
+        <button class="bigbtn reset" id="resetPatterns">Clear</button>
+      </div>
+      <div class="feedback" id="feedback3"></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL STAR: Pronunciation game ============ -->
+  <section class="panel" id="panelstar">
+    <div class="star-banner">
+      <div class="stardot">⭐</div>
+      <div>
+        <h2>Teaching Star! Pronunciation Practice</h2>
+        <p>Watch the mouth shape. No sound is made. Can you guess the word?</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="instructions" id="starPrompt">Tap "Show mouth shape" and watch carefully — then guess which word it is!</p>
+
+      <div class="mouth-stage">
+        <div class="mouth-face">
+          <div class="eye left"></div>
+          <div class="eye right"></div>
+          <div class="mouth-shape shape-flat" id="mouthShape"></div>
+        </div>
+
+        <button class="bigbtn play" id="showMouth">👄 Show mouth shape</button>
+
+        <div class="guess-options" id="guessOptions"></div>
+
+        <div class="star-controls">
+          <div class="score-pill" id="starScore">Score: 0 / 0</div>
+          <button class="bigbtn next" id="nextWord">Next word ➜</button>
+          <button class="bigbtn reset" id="resetStar">Reset game</button>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedbackStar" style="text-align:center;"></div>
+
+      <div class="teacher-note">
+        <b>How to play as a class:</b> One student comes to the board and taps "Show mouth shape" — but instead of the animation, <i>you or a volunteer</i> mouths the real word silently to the class first. Use the on-screen animation as a model of exaggerated mouth shapes, then switch to real faces. Children guess, say the word together with the same exaggerated mouth shape, then check the answer on the board. Continue in pairs.
+      </div>
+    </div>
+  </section>
+
+  <footer>Academy Stars 2 &middot; Unit 1 &middot; Lesson 5 — Sounds and letters</footer>
+
+  </main>
+</div>
+
+<script>
+/* ---------------- Speech helper ---------------- */
+function speak(text, rate){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = rate || 0.8;
+    u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* speech not available, fail silently */ }
+}
+
+/* ---------------- Tab switching ---------------- */
+const tabButtons = document.querySelectorAll('.tabbtn');
+tabButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    tabButtons.forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+  });
+});
+
+/* ================= ACTIVITY 1: word builder ================= */
+const words = [
+  {word:'cat', missing:0, art:'🐱', letters:['c','a','t']},
+  {word:'pen', missing:1, art:'🖊️', letters:['p','e','n']},
+  {word:'fig', missing:1, art:'🟣', letters:['f','i','g']},
+  {word:'dog', missing:1, art:'🐶', letters:['d','o','g']},
+  {word:'cub', missing:1, art:'🐺', letters:['c','u','b']}
+];
+/* Note: 'cat' fully given in the book as an example; keep first fully solved, others need the vowel filled */
+
+const wordGrid = document.getElementById('wordGrid');
+const wordState = [];
+
+words.forEach((w, idx)=>{
+  const wrap = document.createElement('div');
+  wrap.className = 'word-card';
+  wrap.dataset.index = idx;
+
+  const art = document.createElement('div');
+  art.className='art';
+  art.textContent = w.art;
+  wrap.appendChild(art);
+
+  const soundBtn = document.createElement('button');
+  soundBtn.className='soundbtn';
+  soundBtn.textContent='🔊';
+  soundBtn.addEventListener('click', ()=> speak(w.word));
+  wrap.appendChild(soundBtn);
+
+  const build = document.createElement('div');
+  build.className='word-build';
+
+  w.letters.forEach((ch, li)=>{
+    if(li === w.missing && idx !== 0){
+      const slot = document.createElement('div');
+      slot.className='letter-slot';
+      slot.dataset.answer = ch;
+      slot.textContent='';
+      build.appendChild(slot);
+    } else {
+      const fixed = document.createElement('div');
+      fixed.className='letter-fixed';
+      fixed.textContent = ch;
+      build.appendChild(fixed);
+    }
+  });
+  wrap.appendChild(build);
+
+  if(idx !== 0){
+    const choices = document.createElement('div');
+    choices.className='letter-choices';
+    /* scramble a small set including the correct vowel */
+    const vowelPool = ['a','e','i','o','u'];
+    const correct = w.letters[w.missing];
+    const distractors = vowelPool.filter(v=>v!==correct).sort(()=>0.5-Math.random()).slice(0,2);
+    const options = [correct, ...distractors].sort(()=>0.5-Math.random());
+    options.forEach(letter=>{
+      const b = document.createElement('button');
+      b.className='letter-choice';
+      b.textContent = letter;
+      b.addEventListener('click', ()=>{
+        const slot = wrap.querySelector('.letter-slot');
+        if(slot.classList.contains('filled')) return;
+        slot.textContent = letter;
+        slot.dataset.chosen = letter;
+        slot.classList.add('filled');
+        b.classList.add('used');
+      });
+      choices.appendChild(b);
+    });
+    wrap.appendChild(choices);
+  } else {
+    wrap.classList.add('solved');
+  }
+
+  wordGrid.appendChild(wrap);
+  wordState.push(wrap);
+});
+
+document.getElementById('checkAll1').addEventListener('click', ()=>{
+  let allCorrect = true;
+  let anyFilled = false;
+  wordState.forEach((wrap, idx)=>{
+    if(idx===0) return;
+    const slot = wrap.querySelector('.letter-slot');
+    if(!slot.classList.contains('filled')){ allCorrect=false; return; }
+    anyFilled = true;
+    if(slot.dataset.chosen === slot.dataset.answer){
+      wrap.classList.add('solved');
+    } else {
+      allCorrect = false;
+      slot.classList.remove('filled');
+      slot.textContent='';
+      wrap.querySelectorAll('.letter-choice.used').forEach(b=>b.classList.remove('used'));
+    }
+  });
+  const fb = document.getElementById('feedback1');
+  if(!anyFilled){
+    fb.textContent = 'Fill in a missing letter first!';
+    fb.className='feedback bad';
+  } else if(allCorrect){
+    fb.textContent = 'Wonderful! Every word is complete. 🎉';
+    fb.className='feedback good';
+  } else {
+    fb.textContent = 'Good try — some letters went back. Have another go!';
+    fb.className='feedback bad';
+  }
+});
+
+document.getElementById('resetAll1').addEventListener('click', ()=>{
+  wordState.forEach((wrap, idx)=>{
+    if(idx===0) return;
+    wrap.classList.remove('solved');
+    const slot = wrap.querySelector('.letter-slot');
+    slot.classList.remove('filled');
+    slot.textContent='';
+    delete slot.dataset.chosen;
+    wrap.querySelectorAll('.letter-choice').forEach(b=>b.classList.remove('used'));
+  });
+  document.getElementById('feedback1').textContent='';
+});
+
+/* ================= ACTIVITY 2: chant ================= */
+document.getElementById('playChant1').addEventListener('click', ()=> speak('The black cat is under the red bed.', 0.75));
+document.getElementById('playChant2').addEventListener('click', ()=> speak('My mum has got a funny wig.', 0.75));
+document.getElementById('playChant3').addEventListener('click', ()=> speak('The frog and the dog are on the log.', 0.75));
+
+let activeBlank = null;
+const blanks = document.querySelectorAll('.miniblank');
+blanks.forEach(b=>{
+  b.addEventListener('click', ()=>{
+    blanks.forEach(x=>x.style.outline='none');
+    activeBlank = b;
+    b.style.outline='3px solid var(--fox)';
+  });
+});
+
+const chantKeysWrap = document.getElementById('chantKeys');
+['a','e','i','o','u'].forEach(letter=>{
+  const btn = document.createElement('button');
+  btn.textContent = letter;
+  btn.addEventListener('click', ()=>{
+    if(!activeBlank) return;
+    activeBlank.textContent = letter;
+    activeBlank.dataset.chosen = letter;
+    activeBlank.classList.remove('correct','wrong');
+    activeBlank.style.outline='none';
+  });
+  chantKeysWrap.appendChild(btn);
+});
+const delBtn = document.createElement('button');
+delBtn.textContent='⌫';
+delBtn.className='del';
+delBtn.addEventListener('click', ()=>{
+  if(!activeBlank) return;
+  activeBlank.textContent='?';
+  delete activeBlank.dataset.chosen;
+  activeBlank.classList.remove('correct','wrong');
+});
+chantKeysWrap.appendChild(delBtn);
+
+document.getElementById('checkChant').addEventListener('click', ()=>{
+  let total=0, correct=0;
+  blanks.forEach(b=>{
+    total++;
+    if(b.dataset.chosen === b.dataset.answer){
+      correct++;
+      b.classList.add('correct'); b.classList.remove('wrong');
+    } else if(b.dataset.chosen){
+      b.classList.add('wrong'); b.classList.remove('correct');
+    }
+  });
+  const fb = document.getElementById('feedback2');
+  if(correct===total){
+    fb.textContent = 'The whole chant is correct! Say it together one more time. 🎶';
+    fb.className='feedback good';
+  } else {
+    fb.textContent = `You got ${correct} out of ${total} right. Fix the red ones and check again.`;
+    fb.className='feedback bad';
+  }
+});
+
+document.getElementById('resetChant').addEventListener('click', ()=>{
+  blanks.forEach(b=>{
+    b.textContent='?';
+    delete b.dataset.chosen;
+    b.classList.remove('correct','wrong');
+  });
+  document.getElementById('feedback2').textContent='';
+});
+
+/* ================= ACTIVITY 3: patterns ================= */
+const groupA = ['thirty','forty','fifty','sixty','seventy'];
+const groupB = ['ruler','rubber','sister','brother','teacher'];
+/* matching pattern: rubber/sister/teacher/brother all share 'er' sound-ish endings; ruler has 'er' too.
+   Keep it simple & true to book: underline the shared ending letters. Book target letters = 'er' for most,
+   but 'ruler' ends 'er', 'rubber' ends 'er', 'sister' ends 'er', 'brother' ends 'er', 'teacher' ends 'er'.
+   All five actually end in "er" - matches book instruction "underline the pattern in these words". */
+
+function buildPatternRow(word, container, sharedEndingLength){
+  const row = document.createElement('div');
+  row.className='pattern-word';
+  const chars = word.split('');
+  chars.forEach((ch, i)=>{
+    const span = document.createElement('span');
+    span.className='ch';
+    span.textContent = ch;
+    span.dataset.word = word;
+    span.dataset.pos = i;
+    const isEnding = i >= word.length - sharedEndingLength;
+    span.dataset.shouldMark = isEnding ? '1' : '0';
+    span.addEventListener('click', ()=>{
+      span.classList.toggle('marked');
+    });
+    row.appendChild(span);
+  });
+  container.appendChild(row);
+}
+
+const patternGroupA = document.getElementById('patternGroupA');
+groupA.forEach(w=> buildPatternRow(w, patternGroupA, 2)); // "ty" ending
+
+const patternGroupB = document.getElementById('patternGroupB');
+groupB.forEach(w=> buildPatternRow(w, patternGroupB, 2)); // "er" ending
+
+document.getElementById('checkPatterns').addEventListener('click', ()=>{
+  let total=0, right=0;
+  document.querySelectorAll('.pattern-word .ch').forEach(span=>{
+    total++;
+    const shouldMark = span.dataset.shouldMark === '1';
+    const isMarked = span.classList.contains('marked');
+    if(shouldMark === isMarked) right++;
+  });
+  const fb = document.getElementById('feedback3');
+  const pct = Math.round((right/total)*100);
+  if(pct === 100){
+    fb.textContent = 'Perfect! You found the matching pattern in every word. 🌟';
+    fb.className='feedback good';
+  } else {
+    fb.textContent = `Good spotting so far (${pct}%). Look again — every word ends the same way!`;
+    fb.className='feedback bad';
+  }
+});
+
+document.getElementById('resetPatterns').addEventListener('click', ()=>{
+  document.querySelectorAll('.pattern-word .ch.marked').forEach(s=>s.classList.remove('marked'));
+  document.getElementById('feedback3').textContent='';
+});
+
+/* ================= PRONUNCIATION STAR GAME ================= */
+/* Mouth shapes are simplified visual approximations to model exaggerated shapes, not phonetic accuracy */
+const starWords = [
+  {word:'cat', shapeClass:'shape-wide'},
+  {word:'pen', shapeClass:'shape-smile'},
+  {word:'fig', shapeClass:'shape-small'},
+  {word:'dog', shapeClass:'shape-round'},
+  {word:'cub', shapeClass:'shape-round'}
+];
+let starDeck = [];
+let currentStarWord = null;
+let starScore = { correct:0, total:0 };
+let mouthShown = false;
+
+function shuffleDeck(){
+  starDeck = [...starWords].sort(()=>0.5-Math.random());
+}
+shuffleDeck();
+
+function pickNextWord(){
+  if(starDeck.length === 0) shuffleDeck();
+  currentStarWord = starDeck.pop();
+  mouthShown = false;
+  document.getElementById('mouthShape').className = 'mouth-shape shape-flat';
+  document.getElementById('starPrompt').textContent = 'Tap "Show mouth shape" and watch carefully — then guess which word it is!';
+  document.getElementById('feedbackStar').textContent='';
+  renderGuessOptions();
+}
+
+function renderGuessOptions(){
+  const wrap = document.getElementById('guessOptions');
+  wrap.innerHTML='';
+  const others = starWords.filter(w=>w.word !== currentStarWord.word).sort(()=>0.5-Math.random()).slice(0,2);
+  const options = [currentStarWord, ...others].sort(()=>0.5-Math.random());
+  options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className='guess-btn';
+    btn.textContent = opt.word;
+    btn.addEventListener('click', ()=> handleGuess(opt.word, btn));
+    wrap.appendChild(btn);
+  });
+}
+
+function handleGuess(guessWord, btnEl){
+  if(!mouthShown){
+    document.getElementById('feedbackStar').textContent = 'Watch the mouth shape first, then guess!';
+    document.getElementById('feedbackStar').className='feedback bad';
+    return;
+  }
+  document.querySelectorAll('.guess-btn').forEach(b=>b.disabled=true);
+  starScore.total++;
+  const fb = document.getElementById('feedbackStar');
+  if(guessWord === currentStarWord.word){
+    starScore.correct++;
+    btnEl.classList.add('correct-flash');
+    fb.textContent = `Yes! It was "${currentStarWord.word}". Say it together with the same mouth shape!`;
+    fb.className='feedback good';
+    speak(currentStarWord.word);
+  } else {
+    btnEl.classList.add('wrong-flash');
+    fb.textContent = `Not quite — the word was "${currentStarWord.word}". Try the shape again!`;
+    fb.className='feedback bad';
+    speak(currentStarWord.word);
+  }
+  document.getElementById('starScore').textContent = `Score: ${starScore.correct} / ${starScore.total}`;
+}
+
+document.getElementById('showMouth').addEventListener('click', ()=>{
+  mouthShown = true;
+  document.getElementById('mouthShape').className = 'mouth-shape ' + currentStarWord.shapeClass;
+  document.getElementById('starPrompt').textContent = 'Look at my mouth. What word am I saying? No sound — just the shape!';
+});
+
+document.getElementById('nextWord').addEventListener('click', pickNextWord);
+
+document.getElementById('resetStar').addEventListener('click', ()=>{
+  starScore = {correct:0,total:0};
+  document.getElementById('starScore').textContent = 'Score: 0 / 0';
+  shuffleDeck();
+  pickNextWord();
+});
+
+pickNextWord();
+
+</script>
+</body>
+</html>
